@@ -6,7 +6,7 @@ from typing import Callable, Optional, Union
 
 from pydantic.utils import import_string
 
-from arq.utils import SecondsTimedelta, to_seconds
+from darq.utils import SecondsTimedelta, to_seconds
 
 
 class D(str, Enum):

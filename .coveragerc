@@ -1,5 +1,5 @@
 [run]
-source = arq
+source = darq
 branch = True
 concurrency = multiprocessing
 

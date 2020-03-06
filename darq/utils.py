@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from time import time
 from typing import Optional, Union
 
-logger = logging.getLogger('arq.utils')
+logger = logging.getLogger('darq.utils')
 
 
 epoch = datetime(1970, 1, 1)

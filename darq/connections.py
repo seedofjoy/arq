@@ -15,7 +15,7 @@ from .constants import default_queue_name, job_key_prefix, result_key_prefix
 from .jobs import Deserializer, Job, JobDef, JobResult, Serializer, deserialize_job, serialize_job
 from .utils import timestamp_ms, to_ms, to_unix_ms
 
-logger = logging.getLogger('arq.connections')
+logger = logging.getLogger('darq.connections')
 
 
 @dataclass
@@ -23,7 +23,7 @@ class RedisSettings:
     """
     No-Op class used to hold redis connection redis_settings.
 
-    Used by :func:`arq.connections.create_pool` and :class:`arq.worker.Worker`.
+    Used by :func:`darq.connections.create_pool` and :class:`darq.worker.Worker`.
     """
 
     host: Union[str, List[Tuple[str, int]]] = 'localhost'
@@ -48,9 +48,9 @@ expires_extra_ms = 86_400_000
 
 class ArqRedis(Redis):
     """
-    Thin subclass of ``aioredis.Redis`` which adds :func:`arq.connections.enqueue_job`.
+    Thin subclass of ``aioredis.Redis`` which adds :func:`darq.connections.enqueue_job`.
 
-    :param redis_settings: an instance of ``arq.connections.RedisSettings``.
+    :param redis_settings: an instance of ``darq.connections.RedisSettings``.
     :param job_serializer: a function that serializes Python objects to bytes, defaults to pickle.dumps
     :param job_deserializer: a function that deserializes bytes into Python objects, defaults to pickle.loads
     :param kwargs: keyword arguments directly passed to ``aioredis.Redis``.
@@ -91,7 +91,7 @@ class ArqRedis(Redis):
         :param _expires: if the job still hasn't started after this duration, do not run it
         :param _job_try: useful when re-enqueueing jobs within a job
         :param kwargs: any keyword arguments to pass to the function
-        :return: :class:`arq.jobs.Job` instance or ``None`` if a job with this ID already exists
+        :return: :class:`darq.jobs.Job` instance or ``None`` if a job with this ID already exists
         """
         job_id = _job_id or uuid4().hex
         job_key = job_key_prefix + job_id
@@ -172,7 +172,7 @@ async def create_pool(
     """
     Create a new redis pool, retrying up to ``conn_retries`` times if the connection fails.
 
-    Similar to ``aioredis.create_redis_pool`` except it returns a :class:`arq.connections.ArqRedis` instance,
+    Similar to ``aioredis.create_redis_pool`` except it returns a :class:`darq.connections.ArqRedis` instance,
     thus allowing job enqueuing.
     """
     settings = settings or RedisSettings()

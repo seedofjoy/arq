@@ -10,8 +10,8 @@ def default_log_config(verbose: bool) -> dict:
         'version': 1,
         'disable_existing_loggers': False,
         'handlers': {
-            'arq.standard': {'level': log_level, 'class': 'logging.StreamHandler', 'formatter': 'arq.standard'}
+            'darq.standard': {'level': log_level, 'class': 'logging.StreamHandler', 'formatter': 'darq.standard'}
         },
-        'formatters': {'arq.standard': {'format': '%(asctime)s: %(message)s', 'datefmt': '%H:%M:%S'}},
-        'loggers': {'arq': {'handlers': ['arq.standard'], 'level': log_level}},
+        'formatters': {'darq.standard': {'format': '%(asctime)s: %(message)s', 'datefmt': '%H:%M:%S'}},
+        'loggers': {'darq': {'handlers': ['darq.standard'], 'level': log_level}},
     }

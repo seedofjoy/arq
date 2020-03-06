@@ -1,0 +1,6 @@
+default_queue_name = 'darq:queue'
+job_key_prefix = 'darq:job:'
+in_progress_key_prefix = 'darq:in-progress:'
+result_key_prefix = 'darq:result:'
+retry_key_prefix = 'darq:retry:'
+health_check_key_suffix = ':health-check'

@@ -1,17 +1,30 @@
 import functools
+import os
 
 import msgpack
 import pytest
 from aioredis import create_redis_pool
 
-from arq.connections import ArqRedis
-from arq.worker import Worker
+from darq.connections import ArqRedis, RedisSettings
+from darq.worker import Worker
+
+TEST_REDIS_HOST = os.environ.get('REDIS_HOST') or 'localhost'
+
+
+@pytest.fixture
+def redis_host():
+    return TEST_REDIS_HOST
+
+
+@pytest.fixture
+def test_redis_settings(redis_host):
+    return RedisSettings(host=redis_host)
 
 
 @pytest.yield_fixture
-async def arq_redis(loop):
+async def arq_redis(loop, redis_host):
     redis_ = await create_redis_pool(
-        ('localhost', 6379), encoding='utf8', loop=loop, commands_factory=ArqRedis, minsize=5
+        (redis_host, 6379), encoding='utf8', loop=loop, commands_factory=ArqRedis, minsize=5
     )
     await redis_.flushall()
     yield redis_
@@ -20,9 +33,9 @@ async def arq_redis(loop):
 
 
 @pytest.yield_fixture
-async def arq_redis_msgpack(loop):
+async def arq_redis_msgpack(loop, redis_host):
     redis_ = await create_redis_pool(
-        ('localhost', 6379),
+        (redis_host, 6379),
         encoding='utf8',
         loop=loop,
         commands_factory=functools.partial(

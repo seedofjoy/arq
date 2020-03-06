@@ -1,5 +1,5 @@
-arq
-===
+darq
+====
 
 .. toctree::
    :maxdepth: 2
@@ -11,14 +11,6 @@ Current Version: |version|
 Job queues and RPC in python with asyncio and redis.
 
 *arq* was conceived as a simple, modern and performant successor to rq_.
-
-.. warning::
-
-   In ``v0.16`` *arq* was **COMPLETELY REWRITTEN** to use an entirely different approach to registering workers,
-   enqueueing jobs and processing jobs. You will need to either keep using ``v0.15`` or entirely rewrite you *arq*
-   integration to use ``v0.16``.
-
-   See `here <./old/index.html>`_ for old docs.
 
 Why use *arq*?
 
@@ -47,7 +39,7 @@ Install
 
 Just::
 
-    pip install arq
+    pip install darq
 
 Redesigned to be less elegant?
 ------------------------------
@@ -77,11 +69,11 @@ Usage
    shutting down (I wrote the ``HerokuWorker`` for rq), however this never really works unless either: all jobs take
    less than 6 seconds or your worker never shuts down when a job is running (impossible).)
 
-   All *arq* jobs should therefore be designed to cope with being called repeatedly if they're cancelled,
+   All *darq* jobs should therefore be designed to cope with being called repeatedly if they're cancelled,
    eg. use database transactions, idempotency keys or redis to mark when an API request or similar has succeeded
    to avoid making it twice.
 
-   **In summary:** sometimes *exactly once* can be hard or impossible, *arq* favours multiple times over zero times.
+   **In summary:** sometimes *exactly once* can be hard or impossible, *darq* favours multiple times over zero times.
 
 Simple Usage
 ............
@@ -96,26 +88,26 @@ To enqueue the jobs, simply run the script::
 
 To execute the jobs, either after running ``demo.py`` or before/during::
 
-    arq demo.WorkerSettings
+    darq demo.WorkerSettings
 
-Append ``--burst`` to stop the worker once all jobs have finished. See :class:`arq.worker.Worker` for more available
+Append ``--burst`` to stop the worker once all jobs have finished. See :class:`darq.worker.Worker` for more available
 properties of ``WorkerSettings``.
 
 You can also watch for changes and reload the worker when the source changes::
 
-    arq demo.WorkerSettings --watch path/to/src
+    darq demo.WorkerSettings --watch path/to/src
 
 This requires watchgod_ to be installed (``pip install watchgod``).
 
-For details on the *arq* CLI::
+For details on the *darq* CLI::
 
-    arq --help
+    darq --help
 
 Startup & Shutdown coroutines
 .............................
 
 The ``on_startup`` and ``on_startup`` coroutines are provided as a convenient way to run logic as the worker
-starts and finishes, see :class:`arq.worker.Worker`.
+starts and finishes, see :class:`darq.worker.Worker`.
 
 For example, in the above example ``session`` is created once when the work starts up and is then used in subsequent
 jobs.
@@ -125,7 +117,7 @@ Deferring Jobs
 
 By default, when a job is enqueued it will run as soon as possible (provided a worker is running). However
 you can schedule jobs to run in the future, either by a given duration (``_defer_by``) or
-at a particular time ``_defer_until``, see :func:`arq.connections.ArqRedis.enqueue_job`.
+at a particular time ``_defer_until``, see :func:`darq.connections.ArqRedis.enqueue_job`.
 
 .. literalinclude:: examples/deferred.py
 
@@ -135,7 +127,7 @@ Job Uniqueness
 Sometimes you want a job to only be run once at a time (eg. a backup) or once for a given parameter (eg. generating
 invoices for a particular company).
 
-*arq* supports this via custom job ids, see see :func:`arq.connections.ArqRedis.enqueue_job`. It guarantees
+*darq* supports this via custom job ids, see see :func:`darq.connections.ArqRedis.enqueue_job`. It guarantees
 that a job with a particular ID cannot be enqueued again until its execution has finished.
 
 .. literalinclude:: examples/job_ids.py
@@ -146,15 +138,15 @@ with the same id won't be enqueued twice (or overwritten) even if they're enqueu
 Job Results
 ...........
 
-You can access job information, status and job results using the :class:`arq.jobs.Job` instance returned from
-:func:`arq.connections.ArqRedis.enqueue_job`.
+You can access job information, status and job results using the :class:`darq.jobs.Job` instance returned from
+:func:`darq.connections.ArqRedis.enqueue_job`.
 
 .. literalinclude:: examples/job_results.py
 
 Retrying jobs and cancellation
 ..............................
 
-As described above, when an arq work shuts down any going jobs are cancelled immediately
+As described above, when an darq work shuts down any going jobs are cancelled immediately
 (via vanilla ``task.cancel()``, so a ``CancelledError`` will be raised). You can see this by running a slow job
 (eg. add ``await asyncio.sleep(5)``) and hitting ``Ctrl+C`` once it's started.
 
@@ -162,7 +154,7 @@ You'll get something like.
 
 .. literalinclude:: examples/slow_job_output.txt
 
-You can also retry jobs by raising the :class:`arq.worker.Retry` exception from within a job,
+You can also retry jobs by raising the :class:`darq.worker.Retry` exception from within a job,
 optionally with a duration to defer rerunning the jobs by:
 
 .. literalinclude:: examples/retry.py
@@ -170,13 +162,13 @@ optionally with a duration to defer rerunning the jobs by:
 Health checks
 .............
 
-*arq* will automatically record some info about its current state in redis every ``health_check_interval`` seconds.
-That key/value will expire after ``health_check_interval + 1`` seconds so you can be sure if the variable exists *arq*
+*darq* will automatically record some info about its current state in redis every ``health_check_interval`` seconds.
+That key/value will expire after ``health_check_interval + 1`` seconds so you can be sure if the variable exists *darq*
 is alive and kicking (technically you can be sure it was alive and kicking ``health_check_interval`` seconds ago).
 
 You can run a health check with the CLI (assuming you're using the first example above)::
 
-    arq --check demo.WorkerSettings
+    darq --check demo.WorkerSettings
 
 The command will output the value of the health check if found;
 then exit ``0`` if the key was found and ``1`` if it was not.
@@ -195,7 +187,7 @@ Where the items have the following meaning:
 Cron Jobs
 .........
 
-Functions can be scheduled to be run periodically at specific times. See :func:`arq.cron.cron`.
+Functions can be scheduled to be run periodically at specific times. See :func:`darq.cron.cron`.
 
 .. literalinclude:: examples/cron.py
 
@@ -203,21 +195,21 @@ Usage roughly shadows `cron <https://helpmanual.io/man8/cron/>`_ except ``None``
 As per the example sets can be used to run at multiple of the given unit.
 
 Note that ``second`` defaults to ``0`` so you don't in inadvertently run jobs every second and ``microsecond``
-defaults to ``123456`` so you don't inadvertently run jobs every microsecond and so *arq* avoids enqueuing jobs
+defaults to ``123456`` so you don't inadvertently run jobs every microsecond and so *darq* avoids enqueuing jobs
 at the top of a second when the world is generally slightly busier.
 
 Custom job serializers
 ......................
 
-By default, *arq* will use the built-in ``pickle`` module to serialize and deserialize jobs. If you wish to
+By default, *darq* will use the built-in ``pickle`` module to serialize and deserialize jobs. If you wish to
 use an alternative serialization methods, you can do so by specifying them when creating the connection pool
 and the worker settings. A serializer function takes a Python object and returns a binary representation
 encoded in a ``bytes`` object. A deserializer function, on the other hand, creates Python objects out of
 a ``bytes`` sequence.
 
 .. warning::
-   It is essential that the serialization functions used by :func:`arq.connections.create_pool` and
-   :class:`arq.worker.Worker` are the same, otherwise jobs created by the former cannot be executed by the
+   It is essential that the serialization functions used by :func:`darq.connections.create_pool` and
+   :class:`darq.worker.Worker` are the same, otherwise jobs created by the former cannot be executed by the
    latter. This also applies when you update your serialization functions: you need to ensure that your new
    functions are backward compatible with the old jobs, or that there are no jobs with the older serialization
    scheme in the queue.
@@ -231,24 +223,24 @@ may enable significant memory improvements over pickle:
 Reference
 ---------
 
-.. automodule:: arq.connections
+.. automodule:: darq.connections
    :members:
 
-.. automodule:: arq.worker
+.. automodule:: darq.worker
    :members: func, Retry, Worker
 
-.. automodule:: arq.cron
+.. automodule:: darq.cron
    :members: cron
 
-.. automodule:: arq.jobs
+.. automodule:: darq.jobs
    :members: JobStatus, Job
 
 .. include:: ../HISTORY.rst
 
-.. |pypi| image:: https://img.shields.io/pypi/v/arq.svg
-   :target: https://pypi.python.org/pypi/arq
-.. |license| image:: https://img.shields.io/pypi/l/arq.svg
-   :target: https://github.com/samuelcolvin/arq
+.. |pypi| image:: https://img.shields.io/pypi/v/darq.svg
+   :target: https://pypi.python.org/pypi/darq
+.. |license| image:: https://img.shields.io/pypi/l/darq.svg
+   :target: https://github.com/seedofjoy/darq
 .. _asyncio: https://docs.python.org/3/library/asyncio.html
 .. _watchgod: https://pypi.org/project/watchgod/
 .. _rq: http://python-rq.org/

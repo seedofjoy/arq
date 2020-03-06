@@ -9,11 +9,11 @@ from time import time
 import pytest
 from pytest_toolbox.comparison import AnyInt, CloseToNow
 
-from arq.connections import ArqRedis
-from arq.constants import default_queue_name
-from arq.jobs import Job, JobDef, SerializationError
-from arq.utils import timestamp_ms
-from arq.worker import Retry, Worker, func
+from darq.connections import ArqRedis
+from darq.constants import default_queue_name
+from darq.jobs import Job, JobDef, SerializationError
+from darq.utils import timestamp_ms
+from darq.worker import Retry, Worker, func
 
 
 async def test_enqueue_job(arq_redis: ArqRedis, worker):
@@ -31,10 +31,10 @@ async def test_enqueue_job_different_queues(arq_redis: ArqRedis, worker):
     async def foobar(ctx):
         return 42
 
-    j1 = await arq_redis.enqueue_job('foobar', _queue_name='arq:queue1')
-    j2 = await arq_redis.enqueue_job('foobar', _queue_name='arq:queue2')
-    worker1: Worker = worker(functions=[func(foobar, name='foobar')], queue_name='arq:queue1')
-    worker2: Worker = worker(functions=[func(foobar, name='foobar')], queue_name='arq:queue2')
+    j1 = await arq_redis.enqueue_job('foobar', _queue_name='darq:queue1')
+    j2 = await arq_redis.enqueue_job('foobar', _queue_name='darq:queue2')
+    worker1: Worker = worker(functions=[func(foobar, name='foobar')], queue_name='darq:queue1')
+    worker2: Worker = worker(functions=[func(foobar, name='foobar')], queue_name='darq:queue2')
 
     await worker1.main()
     await worker2.main()

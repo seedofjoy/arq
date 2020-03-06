@@ -4,17 +4,17 @@ import pickle
 import pytest
 from pytest_toolbox.comparison import CloseToNow
 
-from arq import Worker, func
-from arq.connections import ArqRedis
-from arq.constants import default_queue_name, in_progress_key_prefix, job_key_prefix, result_key_prefix
-from arq.jobs import DeserializationError, Job, JobResult, JobStatus, deserialize_job_raw, serialize_result
+from darq import Worker, func
+from darq.connections import ArqRedis
+from darq.constants import default_queue_name, in_progress_key_prefix, job_key_prefix, result_key_prefix
+from darq.jobs import DeserializationError, Job, JobResult, JobStatus, deserialize_job_raw, serialize_result
 
 
 async def test_job_in_progress(arq_redis: ArqRedis):
     await arq_redis.set(in_progress_key_prefix + 'foobar', b'1')
     j = Job('foobar', arq_redis)
     assert JobStatus.in_progress == await j.status()
-    assert str(j) == '<arq job foobar>'
+    assert str(j) == '<darq job foobar>'
 
 
 async def test_unknown(arq_redis: ArqRedis):

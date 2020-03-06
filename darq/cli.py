@@ -17,8 +17,8 @@ watch_help = 'Watch a directory and reload the worker upon changes.'
 verbose_help = 'Enable verbose output.'
 
 
-@click.command('arq')
-@click.version_option(VERSION, '-V', '--version', prog_name='arq')
+@click.command('darq')
+@click.version_option(VERSION, '-V', '--version', prog_name='darq')
 @click.argument('worker-settings', type=str, required=True)
 @click.option('--burst/--no-burst', default=None, help=burst_help)
 @click.option('--check', is_flag=True, help=health_check_help)
@@ -28,7 +28,7 @@ def cli(*, worker_settings, burst, check, watch, verbose):
     """
     Job queues in python with asyncio and redis.
 
-    CLI to run the arq worker.
+    CLI to run the darq worker.
     """
     sys.path.append(os.getcwd())
     worker_settings = import_string(worker_settings)
@@ -57,7 +57,7 @@ async def watch_reload(path, worker_settings, loop):
         worker.on_stop = lambda s: s != Signals.SIGUSR1 and stop_event.set()
         loop.create_task(worker.async_run())
         async for _ in awatch(path, stop_event=stop_event):
-            print('\nfiles changed, reloading arq worker...')
+            print('\nfiles changed, reloading darq worker...')
             worker.handle_sig(Signals.SIGUSR1)
             await worker.close()
             loop.create_task(worker.async_run())

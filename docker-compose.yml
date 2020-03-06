@@ -1,0 +1,30 @@
+version: '3'
+services:
+
+  redis:
+    image: redis
+
+  base-app: &base-app
+    build:
+      context: .
+    volumes:
+      - .:/work:delegated
+    working_dir: /work
+    tty: true
+
+  app:
+    <<: *base-app
+    depends_on:
+      - redis
+
+  format:
+    <<: *base-app
+    command: make format
+
+  test:
+    <<: *base-app
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+    command: make test

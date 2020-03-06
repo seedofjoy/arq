@@ -2,6 +2,7 @@ import asyncio
 import inspect
 import logging
 import signal
+import typing as t
 from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
@@ -13,8 +14,8 @@ import async_timeout
 from aioredis import MultiExecError
 from pydantic.utils import import_string
 
-from arq.cron import CronJob
-from arq.jobs import Deserializer, SerializationError, Serializer, deserialize_job_raw, serialize_result
+from darq.cron import CronJob
+from darq.jobs import Deserializer, SerializationError, Serializer, deserialize_job_raw, serialize_result
 
 from .connections import ArqRedis, RedisSettings, create_pool, log_redis_info
 from .constants import (
@@ -37,7 +38,7 @@ from .utils import (
     truncate,
 )
 
-logger = logging.getLogger('arq.worker')
+logger = logging.getLogger('darq.worker')
 no_result = object()
 
 
@@ -88,7 +89,7 @@ class Retry(RuntimeError):
     :param defer: duration to wait before rerunning the job
     """
 
-    def __init__(self, defer: Optional[SecondsTimedelta] = None):
+    def __init__(self, defer: t.Optional[SecondsTimedelta] = None) -> None:
         self.defer_score = to_ms(defer)
 
     def __repr__(self):
@@ -99,14 +100,14 @@ class Retry(RuntimeError):
 
 
 class JobExecutionFailed(RuntimeError):
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, JobExecutionFailed):
             return self.args == other.args
         return False
 
 
 class FailedJobs(RuntimeError):
-    def __init__(self, count, job_results):
+    def __init__(self, count: int, job_results) -> None:
         self.count = count
         self.job_results = job_results
 
@@ -126,9 +127,9 @@ class Worker:
     Main class for running jobs.
 
     :param functions: list of functions to register, can either be raw coroutine functions or the
-      result of :func:`arq.worker.func`.
+      result of :func:`darq.worker.func`.
     :param queue_name: queue name to get jobs from
-    :param cron_jobs:  list of cron jobs to run, use :func:`arq.cron.cron` to create them
+    :param cron_jobs:  list of cron jobs to run, use :func:`darq.cron.cron` to create them
     :param redis_settings: settings for creating a redis connection
     :param redis_pool: existing redis pool, generally None
     :param burst: whether to stop the worker once all jobs have been run
@@ -242,9 +243,9 @@ class Worker:
         self.main_task = self.loop.create_task(self.main())
         await self.main_task
 
-    async def run_check(self, retry_jobs: Optional[bool] = None, max_burst_jobs: Optional[int] = None) -> int:
+    async def run_check(self, retry_jobs: t.Optional[bool] = None, max_burst_jobs: t.Optional[int] = None) -> int:
         """
-        Run :func:`arq.worker.Worker.async_run`, check for failed jobs and raise :class:`arq.worker.FailedJobs`
+        Run :func:`darq.worker.Worker.async_run`, check for failed jobs and raise :class:`darq.worker.FailedJobs`
         if any jobs have failed.
 
         :return: number of completed jobs
@@ -282,7 +283,7 @@ class Worker:
                     await asyncio.gather(*self.tasks)
                     return
 
-    async def _poll_iteration(self):
+    async def _poll_iteration(self) -> None:
         count = self.queue_read_limit
         if self.burst and self.max_burst_jobs >= 0:
             burst_jobs_remaining = self.max_burst_jobs - self._jobs_started()
@@ -305,7 +306,7 @@ class Worker:
 
         await self.heart_beat()
 
-    async def run_jobs(self, job_ids):
+    async def run_jobs(self, job_ids: t.Sequence[str]) -> None:
         for job_id in job_ids:
             await self.sem.acquire()
             in_progress_key = in_progress_key_prefix + job_id
@@ -336,7 +337,7 @@ class Worker:
                     t.add_done_callback(lambda _: self.sem.release())
                     self.tasks.append(t)
 
-    async def run_job(self, job_id, score):  # noqa: C901
+    async def run_job(self, job_id: str, score: float):
         start_ms = timestamp_ms()
         v, job_try, _ = await asyncio.gather(
             self.pool.get(job_key_prefix + job_id, encoding=None),
@@ -487,8 +488,8 @@ class Worker:
         await asyncio.shield(self.finish_job(job_id, finish, result_data, result_timeout_s, incr_score))
 
     async def finish_job(
-        self, job_id: str, finish: bool, result_data: bytes, result_timeout_s: Optional[int], incr_score: int
-    ):
+        self, job_id: str, finish: bool, result_data: bytes, result_timeout_s: t.Optional[int], incr_score: int
+    ) -> None:
         with await self.pool as conn:
             await conn.unwatch()
             tr = conn.multi_exec()
@@ -503,7 +504,7 @@ class Worker:
             tr.delete(*delete_keys)
             await tr.execute()
 
-    async def abort_job(self, job_id: str, result_data: Optional[bytes]):
+    async def abort_job(self, job_id: str, result_data: t.Optional[bytes]) -> None:
         with await self.pool as conn:
             await conn.unwatch()
             tr = conn.multi_exec()
@@ -514,11 +515,11 @@ class Worker:
                 tr.setex(result_key_prefix + job_id, self.keep_result_s, result_data)
             await tr.execute()
 
-    async def heart_beat(self):
+    async def heart_beat(self) -> None:
         await self.record_health()
         await self.run_cron()
 
-    async def run_cron(self):
+    async def run_cron(self) -> None:
         n = datetime.now()
         job_futures = set()
 
@@ -536,7 +537,7 @@ class Worker:
 
         job_futures and await asyncio.gather(*job_futures)
 
-    async def record_health(self):
+    async def record_health(self) -> None:
         now_ts = time()
         if (now_ts - self._last_health_check) < self.health_check_interval:
             return
@@ -555,13 +556,13 @@ class Worker:
         elif not self._last_health_check_log:
             self._last_health_check_log = log_suffix
 
-    def _add_signal_handler(self, signal, handler):
+    def _add_signal_handler(self, signal, handler) -> None:
         self.loop.add_signal_handler(signal, partial(handler, signal))
 
-    def _jobs_started(self):
+    def _jobs_started(self) -> int:
         return self.jobs_complete + self.jobs_retried + self.jobs_failed + len(self.tasks)
 
-    def handle_sig(self, signum):
+    def handle_sig(self, signum: int) -> None:
         sig = Signals(signum)
         logger.info(
             'shutdown on %s ◆ %d jobs complete ◆ %d failed ◆ %d retries ◆ %d ongoing to cancel',
@@ -577,7 +578,7 @@ class Worker:
         self.main_task and self.main_task.cancel()
         self.on_stop and self.on_stop(sig)
 
-    async def close(self):
+    async def close(self) -> None:
         if not self.pool:
             return
         await asyncio.gather(*self.tasks)
@@ -588,7 +589,7 @@ class Worker:
         await self.pool.wait_closed()
         self.pool = None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f'<Worker j_complete={self.jobs_complete} j_failed={self.jobs_failed} j_retried={self.jobs_retried} '
             f'j_ongoing={sum(not t.done() for t in self.tasks)}>'
@@ -612,8 +613,10 @@ def run_worker(settings_cls, **kwargs) -> Worker:
 
 
 async def async_check_health(
-    redis_settings: Optional[RedisSettings], health_check_key: Optional[str] = None, queue_name: Optional[str] = None
-):
+    redis_settings: t.Optional[RedisSettings],
+    health_check_key: t.Optional[str] = None,
+    queue_name: t.Optional[str] = None,
+) -> int:
     redis_settings = redis_settings or RedisSettings()
     redis: ArqRedis = await create_pool(redis_settings)
     queue_name = queue_name or default_queue_name

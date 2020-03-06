@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# arq documentation build configuration file, created by
+# darq documentation build configuration file, created by
 # sphinx-quickstart on Sat Aug 13 12:25:33 2016.
 #
 # This file is execfile()d with the current directory set to its
@@ -19,7 +19,7 @@
 #
 import os
 import sys
-sys.path.append(os.path.abspath('../arq'))
+sys.path.append(os.path.abspath('../darq'))
 
 # -- General configuration ------------------------------------------------
 
@@ -60,15 +60,15 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'arq'
-copyright = '2016, Samuel Colvin'
-author = 'Samuel Colvin'
+project = 'darq'
+copyright = '2020, Igor Mozharovsky'
+author = 'Igor Mozharovsky'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
-from arq.version import VERSION
+from darq.version import VERSION
 # The short X.Y version. Could change this if you're updating docs for a previous version.
 version = f'v{VERSION}'
 # The full version, including alpha/beta/rc tags.
@@ -139,8 +139,8 @@ html_theme = 'alabaster'
 # documentation.
 #
 html_theme_options = {
-    'github_user': 'samuelcolvin',
-    'github_repo': 'arq',
+    'github_user': 'seedofjoy',
+    'github_repo': 'darq',
     'travis_button': True,
     'codecov_button': True,
     'page_width': '1200px',
@@ -287,7 +287,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'arq.tex', 'arq Documentation',
-     'Samuel Colvin', 'manual'),
+     'Igor Mozharovsky', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

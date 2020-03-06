@@ -10,10 +10,10 @@ if readme.exists():
 else:
     long_description = '-'
 # avoid loading the package before requirements are installed:
-version = SourceFileLoader('version', 'arq/version.py').load_module()
+version = SourceFileLoader('version', 'darq/version.py').load_module()
 
 setup(
-    name='arq',
+    name='darq',
     version=str(version.VERSION),
     description='Job queues in python with asyncio and redis.',
     long_description=long_description,
@@ -32,24 +32,26 @@ setup(
         'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Topic :: Internet',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: System :: Clustering',
         'Topic :: System :: Distributed Computing',
         'Topic :: System :: Monitoring',
         'Topic :: System :: Systems Administration',
+        'Typing :: Typed',
     ],
     python_requires='>=3.6',
-    author='Samuel Colvin',
-    author_email='s@muelcolvin.com',
-    url='https://github.com/samuelcolvin/arq',
+    author='Igor Mozharovsky',
+    author_email='igor.mozharovsky@gmail.com',
+    url='https://github.com/seedofjoy/darq',
     license='MIT',
-    packages=['arq'],
-    package_data={'arq': ['py.typed']},
+    packages=['darq'],
+    package_data={'darq': ['py.typed']},
     zip_safe=True,
     entry_points="""
         [console_scripts]
-        arq=arq.cli:cli
+        darq=darq.cli:cli
     """,
     install_requires=[
         'async-timeout>=3.0.0',
